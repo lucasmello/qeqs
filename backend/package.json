@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "migrate": "node --loader tsx src/database/migrate.ts"
+    "migrate": "tsx src/database/migrate.ts"
   },
   "dependencies": {
     "express": "^4.19.2",
