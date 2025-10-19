@@ -108,7 +108,15 @@ function Calendar() {
       <div className={styles.grid}>
         <div className={styles.calendarContainer}>
           <ReactCalendar
-            onChange={handleDateClick}
+            onChange={(value) => {
+              // value can be Date or Date[] or null
+              if (value instanceof Date) {
+                handleDateClick(value);
+              } else if (Array.isArray(value) && value[0] instanceof Date) {
+                handleDateClick(value[0]);
+              }
+              // if null or incompatible, do nothing
+            }}
             value={selectedDate}
             tileContent={tileContent}
             className={styles.calendar}
