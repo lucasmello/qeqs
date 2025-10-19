@@ -1,8 +1,8 @@
-import { Router } from 'express';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { z } from 'zod';
-import pool from '../database/db.js';
+import { Router } from "express";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { z } from "zod";
+import pool from "../database/db.js";
 
 const router = Router();
 
@@ -18,18 +18,20 @@ const loginSchema = z.object({
 });
 
 // Register
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
     const { username, email, password } = registerSchema.parse(req.body);
 
     // Check if user exists
     const existingUser = await pool.query(
-      'SELECT id FROM users WHERE email = $1 OR username = $2',
+      "SELECT id FROM users WHERE email = $1 OR username = $2",
       [email, username]
     );
 
+    console.log("EXISTING USER? ", existingUser);
+
     if (existingUser.rows.length > 0) {
-      return res.status(400).json({ error: 'User already exists' });
+      return res.status(400).json({ error: "User already exists" });
     }
 
     // Hash password
@@ -37,16 +39,22 @@ router.post('/register', async (req, res) => {
 
     // Create user
     const result = await pool.query(
-      'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email',
+      "INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email",
       [username, email, passwordHash]
     );
+
+    console.log("INSERT RESULT: ", result);
 
     const user = result.rows[0];
 
     // Generate token
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'secret', {
-      expiresIn: '30d',
-    });
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET || "secret",
+      {
+        expiresIn: "30d",
+      }
+    );
 
     res.status(201).json({
       user: {
@@ -60,24 +68,24 @@ router.post('/register', async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Register error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Register error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // Login
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
 
     // Find user
     const result = await pool.query(
-      'SELECT id, username, email, password_hash FROM users WHERE email = $1',
+      "SELECT id, username, email, password_hash FROM users WHERE email = $1",
       [email]
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const user = result.rows[0];
@@ -86,13 +94,17 @@ router.post('/login', async (req, res) => {
     const validPassword = await bcrypt.compare(password, user.password_hash);
 
     if (!validPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
     // Generate token
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'secret', {
-      expiresIn: '30d',
-    });
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET || "secret",
+      {
+        expiresIn: "30d",
+      }
+    );
 
     res.json({
       user: {
@@ -106,35 +118,36 @@ router.post('/login', async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // Get current user
-router.get('/me', async (req, res) => {
+router.get("/me", async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
+    const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
+      return res.status(401).json({ error: "No token provided" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as { userId: number };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as {
+      userId: number;
+    };
 
     const result = await pool.query(
-      'SELECT id, username, email FROM users WHERE id = $1',
+      "SELECT id, username, email FROM users WHERE id = $1",
       [decoded.userId]
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     res.json({ user: result.rows[0] });
   } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
+    res.status(401).json({ error: "Invalid token" });
   }
 });
 
 export default router;
-
