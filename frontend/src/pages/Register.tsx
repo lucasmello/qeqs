@@ -30,7 +30,7 @@ function Register() {
   return (
     <div className={styles.authContainer}>
       <div className={styles.authCard}>
-        <h1 className={styles.authTitle}>🍻 Qeqs</h1>
+        <h1 className={styles.authTitle}>🍻 QEQS</h1>
         <h2 className={styles.authSubtitle}>Create your account</h2>
 
         {error && <div className={styles.error}>{error}</div>}

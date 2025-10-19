@@ -17,6 +17,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUser = async () => {
     try {
-      const response = await axios.get('/api/auth/me');
+      const response = await axios.get(`${API_URL}/api/auth/me`);
       setUser(response.data.user);
     } catch (error) {
       localStorage.removeItem('token');
@@ -44,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = async (email: string, password: string) => {
-    const response = await axios.post('/api/auth/login', { email, password });
+    const response = await axios.post(`${API_URL}/api/auth/login`, { email, password });
     const { token, user } = response.data;
     localStorage.setItem('token', token);
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -52,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (username: string, email: string, password: string) => {
-    const response = await axios.post('/api/auth/register', { username, email, password });
+    const response = await axios.post(`${API_URL}/api/auth/register`, { username, email, password });
     const { token, user } = response.data;
     localStorage.setItem('token', token);
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
